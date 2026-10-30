@@ -4597,7 +4597,7 @@ end)()
 -- UI: Invisible-style library (gui.lua, embedded)
 -- Functions: Aimbot / ESP / Spinbot / AutoShot / Infinite Ammo / No Reload /
 --            Instakill controller / TP Bullet (raycast hook) / Auto Stomp /
---            Hitbox / Anti-Stomp / Speed / Jump / Fly / Infinite Jump /
+--            Hitbox / Anti-Stomp / Jump / Fly / Infinite Jump /
 --            Noclip / Anti-Fling / Teleport / Fullbright / Anti-AFK /
 --            Menu customization (dim background + snow)
 -- ============================================================
@@ -4619,6 +4619,432 @@ getgenv().__SupremeHubGen = GEN
 if getgenv().__SupremeHubCleanup then
     pcall(getgenv().__SupremeHubCleanup)
 end
+
+-- ============================================================
+-- LOADER: BLUR INTRO + SPINNING EMBLEM (top-right corner)
+-- Intro: the screen blurs, the emblem fades in at the center,
+-- spins, then flies into the loader card in the corner.
+-- The card stays while the hub is being built and is removed by
+-- InvisibleLoader.finish() / the getgenv().__InvisibleLoaderReady watchdog.
+-- ============================================================
+
+local InvisibleLoader = (function()
+    local B64 = "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"
+
+    local CARD_W, CARD_H = 288, 76
+    local MARGIN = 18
+    local FLY_POS = UDim2.new(1, -268, 0, 56)
+
+    local ACCENT = Color3.fromRGB(167, 139, 250)
+    local TEXT = Color3.fromRGB(240, 238, 248)
+    local DIM = Color3.fromRGB(140, 138, 160)
+    local INLINE = Color3.fromRGB(17, 16, 24)
+    local OUTLINE = Color3.fromRGB(44, 38, 66)
+    local ELEMENT = Color3.fromRGB(26, 24, 38)
+
+    local loader = {}
+    local finished = false
+    local gui, blur, overlay, card, cardStroke, tile, tileImage, title, status, track, fill
+    local flying, tileSpin, progressTween
+
+    getgenv().__InvisibleLoaderReady = nil
+
+    local function decodeBase64(data)
+        local alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+        local lookup = {}
+        for index = 1, #alphabet do
+            lookup[string.byte(alphabet, index)] = index - 1
+        end
+        local bytes = {}
+        local buffer, bits = 0, 0
+        for index = 1, #data do
+            local code = string.byte(data, index)
+            if code == 61 then
+                break
+            end
+            local value = lookup[code]
+            if value then
+                buffer = buffer * 64 + value
+                bits = bits + 6
+                if bits >= 8 then
+                    bits = bits - 8
+                    local divisor = 2 ^ bits
+                    bytes[#bytes + 1] = string.char(math.floor(buffer / divisor) % 256)
+                    buffer = buffer % divisor
+                end
+            end
+        end
+        return table.concat(bytes)
+    end
+
+    local function emblemAsset()
+        local ok, asset = pcall(function()
+            local path = "invisible_loader_emblem.png"
+            if type(writefile) == "function" then
+                writefile(path, decodeBase64(B64))
+            end
+            if type(getcustomasset) == "function" then
+                return getcustomasset(path)
+            end
+            error("getcustomasset unavailable")
+        end)
+        if ok and type(asset) == "string" and asset ~= "" then
+            return asset
+        end
+        return "rbxassetid://134242818164054"
+    end
+
+    local parent
+    local okParent, resolved = pcall(function()
+        if type(gethui) == "function" then
+            return gethui()
+        end
+        return game:GetService("CoreGui")
+    end)
+    if okParent and resolved then
+        parent = resolved
+    elseif LocalPlayer then
+        parent = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+    end
+    if not parent then
+        loader.finish = function() end
+        loader.destroy = function() end
+        return loader
+    end
+
+    local previous = getgenv().__InvisibleLoader
+    if type(previous) == "table" and type(previous.destroy) == "function" then
+        pcall(previous.destroy)
+    end
+    local stale = parent:FindFirstChild("InvisibleLoaderGui")
+    if stale then
+        pcall(function()
+            stale:Destroy()
+        end)
+    end
+
+    local asset = emblemAsset()
+
+    local lighting = game:GetService("Lighting")
+    if lighting then
+        pcall(function()
+            local oldBlur = lighting:FindFirstChild("InvisibleLoaderBlur")
+            if oldBlur then
+                oldBlur:Destroy()
+            end
+            blur = Instance.new("BlurEffect")
+            blur.Name = "InvisibleLoaderBlur"
+            blur.Size = 0
+            blur.Parent = lighting
+        end)
+    end
+
+    gui = Instance.new("ScreenGui")
+    gui.Name = "InvisibleLoaderGui"
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.DisplayOrder = 999999
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.Parent = parent
+
+    overlay = Instance.new("Frame")
+    overlay.Name = "Overlay"
+    overlay.Size = UDim2.fromScale(1, 1)
+    overlay.BackgroundColor3 = Color3.fromRGB(4, 5, 10)
+    overlay.BackgroundTransparency = 1
+    overlay.BorderSizePixel = 0
+    overlay.Active = false
+    overlay.ZIndex = 1
+    overlay.Parent = gui
+
+    card = Instance.new("Frame")
+    card.Name = "Card"
+    card.AnchorPoint = Vector2.new(1, 0)
+    card.Position = UDim2.new(1, MARGIN + CARD_W + 40, 0, MARGIN)
+    card.Size = UDim2.fromOffset(CARD_W, CARD_H)
+    card.BackgroundColor3 = INLINE
+    card.BackgroundTransparency = 1
+    card.BorderSizePixel = 0
+    card.ZIndex = 3
+    card.Parent = gui
+
+    local cardCorner = Instance.new("UICorner")
+    cardCorner.CornerRadius = UDim.new(0, 14)
+    cardCorner.Parent = card
+
+    cardStroke = Instance.new("UIStroke")
+    cardStroke.Color = OUTLINE
+    cardStroke.Thickness = 1
+    cardStroke.Transparency = 1
+    cardStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    cardStroke.Parent = card
+
+    tile = Instance.new("Frame")
+    tile.Name = "Emblem"
+    tile.Position = UDim2.fromOffset(14, 14)
+    tile.Size = UDim2.fromOffset(48, 48)
+    tile.BackgroundColor3 = ELEMENT
+    tile.BackgroundTransparency = 1
+    tile.BorderSizePixel = 0
+    tile.ZIndex = 3
+    tile.Parent = card
+
+    local tileCorner = Instance.new("UICorner")
+    tileCorner.CornerRadius = UDim.new(0, 12)
+    tileCorner.Parent = tile
+
+    tileImage = Instance.new("ImageLabel")
+    tileImage.Name = "EmblemImage"
+    tileImage.AnchorPoint = Vector2.new(0.5, 0.5)
+    tileImage.Position = UDim2.fromScale(0.5, 0.5)
+    tileImage.Size = UDim2.fromOffset(34, 40)
+    tileImage.BackgroundTransparency = 1
+    tileImage.Image = asset
+    tileImage.ImageTransparency = 1
+    tileImage.ScaleType = Enum.ScaleType.Fit
+    tileImage.Parent = tile
+
+    title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.BackgroundTransparency = 1
+    title.Position = UDim2.fromOffset(76, 11)
+    title.Size = UDim2.new(1, -90, 0, 18)
+    title.Font = Enum.Font.GothamBold
+    title.Text = "INVISIBLE"
+    title.TextSize = 15
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextColor3 = TEXT
+    title.TextTransparency = 1
+    title.Parent = card
+
+    status = Instance.new("TextLabel")
+    status.Name = "Status"
+    status.BackgroundTransparency = 1
+    status.Position = UDim2.fromOffset(76, 31)
+    status.Size = UDim2.new(1, -90, 0, 16)
+    status.Font = Enum.Font.GothamMedium
+    status.Text = "Загрузка..."
+    status.TextSize = 13
+    status.TextXAlignment = Enum.TextXAlignment.Left
+    status.TextColor3 = DIM
+    status.TextTransparency = 1
+    status.Parent = card
+
+    track = Instance.new("Frame")
+    track.Name = "Track"
+    track.Position = UDim2.fromOffset(76, 56)
+    track.Size = UDim2.fromOffset(196, 4)
+    track.BackgroundColor3 = ELEMENT
+    track.BackgroundTransparency = 1
+    track.BorderSizePixel = 0
+    track.Parent = card
+
+    local trackCorner = Instance.new("UICorner")
+    trackCorner.CornerRadius = UDim.new(1, 0)
+    trackCorner.Parent = track
+
+    fill = Instance.new("Frame")
+    fill.Name = "Fill"
+    fill.Size = UDim2.new(0, 0, 1, 0)
+    fill.BackgroundColor3 = ACCENT
+    fill.BackgroundTransparency = 1
+    fill.BorderSizePixel = 0
+    fill.Parent = track
+
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(1, 0)
+    fillCorner.Parent = fill
+
+    flying = Instance.new("ImageLabel")
+    flying.Name = "Emblem"
+    flying.AnchorPoint = Vector2.new(0.5, 0.5)
+    flying.Position = UDim2.fromScale(0.5, 0.5)
+    flying.Size = UDim2.fromOffset(40, 48)
+    flying.BackgroundTransparency = 1
+    flying.Image = asset
+    flying.ImageTransparency = 1
+    flying.ScaleType = Enum.ScaleType.Fit
+    flying.ZIndex = 50
+    flying.Parent = gui
+
+    local function startProgress()
+        tileSpin = TweenService:Create(tileImage, TweenInfo.new(1.15, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1), { Rotation = 360 })
+        tileSpin:Play()
+        progressTween = TweenService:Create(fill, TweenInfo.new(7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { Size = UDim2.new(0.9, 0, 1, 0) })
+        progressTween:Play()
+    end
+
+    local function land()
+        if flying then
+            pcall(function()
+                flying:Destroy()
+            end)
+            flying = nil
+        end
+        if not (gui and gui.Parent) then
+            return
+        end
+        card.Position = UDim2.new(1, -MARGIN, 0, MARGIN)
+        card.BackgroundTransparency = 0.06
+        cardStroke.Transparency = 0.25
+        tile.BackgroundTransparency = 0.1
+        tileImage.ImageTransparency = 0
+        title.TextTransparency = 0
+        status.TextTransparency = 0
+        track.BackgroundTransparency = 0
+        fill.BackgroundTransparency = 0
+        if not tileSpin then
+            startProgress()
+        end
+    end
+
+    local function intro()
+        local fadeIn = TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+        TweenService:Create(overlay, fadeIn, { BackgroundTransparency = 0.55 }):Play()
+        TweenService:Create(flying, fadeIn, { Size = UDim2.fromOffset(170, 200), ImageTransparency = 0 }):Play()
+        if blur then
+            TweenService:Create(blur, fadeIn, { Size = 26 }):Play()
+        end
+        task.wait(0.72)
+
+        local spin = TweenService:Create(flying, TweenInfo.new(1.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Rotation = 720 })
+        spin:Play()
+        spin.Completed:Wait()
+
+        local fly = TweenService:Create(flying, TweenInfo.new(0.62, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), {
+            Position = FLY_POS,
+            Size = UDim2.fromOffset(34, 40),
+        })
+        local fadeCard = TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+        fly:Play()
+        TweenService:Create(card, fadeCard, { Position = UDim2.new(1, -MARGIN, 0, MARGIN), BackgroundTransparency = 0.06 }):Play()
+        TweenService:Create(cardStroke, fadeCard, { Transparency = 0.25 }):Play()
+        TweenService:Create(tile, fadeCard, { BackgroundTransparency = 0.1 }):Play()
+        TweenService:Create(title, fadeCard, { TextTransparency = 0 }):Play()
+        TweenService:Create(status, fadeCard, { TextTransparency = 0 }):Play()
+        TweenService:Create(track, fadeCard, { BackgroundTransparency = 0 }):Play()
+        TweenService:Create(fill, fadeCard, { BackgroundTransparency = 0 }):Play()
+        fly.Completed:Wait()
+
+        flying.Visible = false
+        tileImage.ImageTransparency = 0
+        flying:Destroy()
+        flying = nil
+
+        startProgress()
+    end
+
+    if not pcall(intro) then
+        land()
+    end
+
+    local function fadeOutCard()
+        local info = TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+        TweenService:Create(card, info, { BackgroundTransparency = 1 }):Play()
+        TweenService:Create(cardStroke, info, { Transparency = 1 }):Play()
+        TweenService:Create(tile, info, { BackgroundTransparency = 1 }):Play()
+        TweenService:Create(tileImage, info, { ImageTransparency = 1 }):Play()
+        TweenService:Create(title, info, { TextTransparency = 1 }):Play()
+        TweenService:Create(status, info, { TextTransparency = 1 }):Play()
+        TweenService:Create(track, info, { BackgroundTransparency = 1 }):Play()
+        TweenService:Create(fill, info, { BackgroundTransparency = 1 }):Play()
+    end
+
+    local function destroy()
+        finished = true
+        if tileSpin then
+            pcall(function()
+                tileSpin:Cancel()
+            end)
+        end
+        if progressTween then
+            pcall(function()
+                progressTween:Cancel()
+            end)
+        end
+        if gui then
+            pcall(function()
+                gui.Enabled = false
+                gui:Destroy()
+            end)
+        end
+        if blur then
+            pcall(function()
+                if blur.Parent then
+                    blur:Destroy()
+                end
+            end)
+        end
+        if getgenv().__InvisibleLoader == loader then
+            getgenv().__InvisibleLoader = nil
+        end
+    end
+
+    local function finish()
+        if finished then
+            return
+        end
+        finished = true
+        pcall(function()
+            if not (gui and gui.Parent) then
+                return
+            end
+            if tileSpin then
+                pcall(function()
+                    tileSpin:Cancel()
+                end)
+            end
+            if progressTween then
+                pcall(function()
+                    progressTween:Cancel()
+                end)
+            end
+            status.Text = "Готово"
+            status.TextColor3 = ACCENT
+            TweenService:Create(fill, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, 0, 1, 0),
+            }):Play()
+            TweenService:Create(overlay, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                BackgroundTransparency = 1,
+            }):Play()
+            if blur then
+                TweenService:Create(blur, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                    Size = 0,
+                }):Play()
+            end
+        end)
+        task.delay(0.6, function()
+            pcall(function()
+                if not (gui and gui.Parent) then
+                    return
+                end
+                TweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    Position = UDim2.new(1, MARGIN + 60, 0, MARGIN),
+                }):Play()
+                fadeOutCard()
+            end)
+        end)
+        task.delay(1.4, destroy)
+    end
+
+    loader.finish = finish
+    loader.destroy = destroy
+    getgenv().__InvisibleLoader = loader
+
+    task.spawn(function()
+        local started = tick()
+        while not finished do
+            if getgenv().__InvisibleLoaderReady or (tick() - started) > 30 then
+                finish()
+                return
+            end
+            task.wait(0.25)
+        end
+    end)
+
+    return loader
+end)()
+
 
 local Running = true
 local MenuOpen = false
@@ -4645,16 +5071,19 @@ local S = {
     Aim_FOV = 150,
     Aim_ShowFOV = false,
     Aim_BulletSpeed = 1500,
-    Aimbot_Mode = "Normal",
     FOV_Color = Color3.fromRGB(255, 255, 255),
+    Aimbot_Lock = {},
+    Aimbot_LockActive = false,
 
-    -- Silent aim
-    Silent_FOV = 300,
-    Silent_Range = 500,
-    Silent_WallCheck = false,
-    Silent_AimPart = "Head",
-    Silent_ShowFOV = false,
-    Silent_FOV_Color = Color3.fromRGB(255, 90, 90),
+    -- Silent aim (Mouse.Hit)
+    SilentV2_Enabled = false,
+    SilentV2_Part = "Head",
+    SilentV2_Prediction = 0,
+    SilentV2_FOV = 300,
+    SilentV2_ShowFOV = true,
+    SilentV2_Transparency = 0.5,
+    SilentV2_KnockCheck = true,
+    SilentV2_MinHealth = 1,
 
     -- ESP
     ESP_Enabled = false,
@@ -4684,8 +5113,6 @@ local S = {
     Spinbot_Enabled = false,
     Spinbot_Speed = 720,
     Spinbot_Tilt = false,
-    Speed_Enabled = false,
-    Speed_Value = 60,
     Jump_Enabled = false,
     Jump_Value = 90,
     Fly_Enabled = false,
@@ -4703,6 +5130,29 @@ local S = {
     AutoShot_Rate = 12,
     AutoShot_RequireTarget = true,
     AutoShot_Mode = "Tool",
+
+    -- Host auto shot
+    HostShot_Enabled = false,
+    HostShot_RandomDelay = true,
+    HostShot_MinDelay = 0.135,
+    HostShot_MaxDelay = 0.155,
+    HostShot_Burst = 1,
+    HostShot_BurstDelay = 0.01,
+    HostShot_DelayBefore = 0.01,
+    HostShot_ShowEmoji = true,
+    HostShot_Weapons = {
+        ["[Knife]"] = false,
+        ["[Pistol]"] = true,
+        ["[Deagle]"] = true,
+        ["[Revolver]"] = true,
+        ["[Shotgun]"] = true,
+        ["[TacticalShotgun]"] = true,
+        ["[Double-Barrel SG]"] = true,
+        ["[SMG]"] = true,
+        ["[Rifle]"] = true,
+        ["[Sniper]"] = true,
+    },
+
     AutoStomp_Enabled = false,
     AutoStomp_Key = "",
     Hitbox_Enabled = false,
@@ -5644,6 +6094,9 @@ local function findTarget()
         if WHITELIST.IsPlayer(player) or not isAlive(character) then
             return
         end
+        if player and S.Aimbot_LockActive and not S.Aimbot_Lock[player.Name] then
+            return
+        end
         local part = getAimPart(character)
         if not part then
             return
@@ -5681,71 +6134,6 @@ local function findTarget()
         for npc in pairs(Tracked_NPCs) do
             local hrp = npc:FindFirstChild("HumanoidRootPart")
             if hrp then
-                consider(npc, npc, nil)
-            end
-        end
-    end
-
-    return bestPart, bestPlayer
-end
-
-local function findSilentTarget()
-    local camera = workspace.CurrentCamera
-    if not camera then
-        return nil
-    end
-
-    local bestPart = nil
-    local bestPlayer = nil
-    local shortest = S.Silent_FOV
-    local mouse = UserInputService:GetMouseLocation()
-    local origin = camera.CFrame.Position
-
-    local function consider(entityId, character, player)
-        if WHITELIST.IsPlayer(player) or not isAlive(character) then
-            return
-        end
-
-        local part = getAimPart(character, S.Silent_AimPart)
-        if not part then
-            return
-        end
-
-        if (part.Position - origin).Magnitude > S.Silent_Range then
-            return
-        end
-
-        local screenPos, onScreen = camera:WorldToViewportPoint(part.Position)
-        if not onScreen then
-            return
-        end
-
-        local distanceToMouse = (Vector2.new(screenPos.X, screenPos.Y) - mouse).Magnitude
-        if distanceToMouse >= shortest then
-            return
-        end
-
-        if S.Silent_WallCheck and not getVisibility(entityId, character) then
-            return
-        end
-
-        bestPart = part
-        bestPlayer = player
-        shortest = distanceToMouse
-    end
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local team = player.Team
-            if not (S.Aimbot_TeamCheck and team ~= nil and team == LocalPlayer.Team) then
-                consider(tostring(player.UserId), player.Character, player)
-            end
-        end
-    end
-
-    if S.Aimbot_TargetNPCs then
-        for npc in pairs(Tracked_NPCs) do
-            if npc:FindFirstChild("HumanoidRootPart") then
                 consider(npc, npc, nil)
             end
         end
@@ -5859,19 +6247,14 @@ end
 local function updateAimbot(dt, mouse)
     -- Rage owns the shared target until it stops; other aim modes must not overwrite it.
     if S.Rage_Enabled or (INSTA and INSTA.Owns()) then return end
-    if not (S.Aimbot_Enabled or S.AutoShot_Enabled or S.TP_Bullet_Enabled or S.Aimbot_Mode == "Silent" or S.Rage_Enabled) then
+    if not (S.Aimbot_Enabled or S.AutoShot_Enabled or S.TP_Bullet_Enabled or S.Rage_Enabled) then
         CurrentTargetPart = nil
         CurrentTargetPlayer = nil
         currentTargetPos = nil
         return
     end
 
-    local targetPart, targetPlayer
-    if S.Aimbot_Mode == "Silent" then
-        targetPart, targetPlayer = findSilentTarget()
-    else
-        targetPart, targetPlayer = findTarget()
-    end
+    local targetPart, targetPlayer = findTarget()
     CurrentTargetPart = targetPart
     CurrentTargetPlayer = targetPlayer
     currentTargetPos = targetPart and targetPart.Position or nil
@@ -6030,13 +6413,12 @@ local function updateAntiStomp(dt)
 end
 
 -- ============================================================
--- MOVEMENT: SPEED / JUMP / FLY / NOCLIP / ANTI-FLING
+-- MOVEMENT: JUMP / FLY / NOCLIP / ANTI-FLING
 -- ============================================================
 
 local movementSaved = setmetatable({}, { __mode = "k" })
 local noclipSaved = setmetatable({}, { __mode = "k" })
 local FLY = { active = false, humanoid = nil }
-local setSpeedEnabled = function(value) S.Speed_Enabled = value end
 
 local function stopFly()
     if not FLY.active then
@@ -6050,7 +6432,7 @@ local function stopFly()
     end
 end
 
-local function updateSpeedAndJump()
+local function updateJump()
     local humanoid = getHumanoid()
     if not humanoid or humanoid.Health <= 0 then
         return
@@ -6059,42 +6441,11 @@ local function updateSpeedAndJump()
     local saved = movementSaved[humanoid]
     if not saved then
         saved = {
-            WalkSpeed = humanoid.WalkSpeed,
             JumpPower = humanoid.JumpPower,
             JumpHeight = humanoid.JumpHeight,
             UseJumpPower = humanoid.UseJumpPower,
         }
         movementSaved[humanoid] = saved
-    end
-
-    if S.Speed_Enabled and not S.Fly_Enabled and not S.Rage_Enabled then
-        local requested = tonumber(S.Speed_Value) or 60
-        if requested ~= requested then requested = 60 end
-        local target = math.clamp(requested, 16, 120)
-        local now = os.clock()
-        -- Apply on enable/value change only. Never fight a game reset each frame.
-        if not saved.SpeedApplied or saved.SpeedTarget ~= target then
-            if not saved.SpeedApplyAt or now - saved.SpeedApplyAt >= 0.5 then
-                if not saved.SpeedApplied then saved.WalkSpeed = humanoid.WalkSpeed end
-                saved.SpeedApplied = true
-                saved.SpeedTarget = target
-                saved.SpeedApplyAt = now
-                if humanoid.WalkSpeed ~= target then humanoid.WalkSpeed = target end
-            end
-        elseif humanoid.WalkSpeed ~= target and now - saved.SpeedApplyAt >= 0.5 then
-            saved.SpeedApplied = false
-            saved.SpeedTarget = nil
-            setSpeedEnabled(false)
-            notify("Speed disabled: the game reset WalkSpeed")
-        end
-    elseif saved.SpeedApplied then
-        -- Preserve a newer game value when it has already replaced our speed.
-        if humanoid.WalkSpeed == saved.SpeedTarget then
-            humanoid.WalkSpeed = saved.WalkSpeed
-        end
-        saved.SpeedApplied = false
-        saved.SpeedTarget = nil
-        saved.SpeedApplyAt = nil
     end
 
     if S.Jump_Enabled then
@@ -6957,6 +7308,576 @@ local function updateAutoShot(dt)
 end
 
 -- ============================================================
+-- HOST AUTO SHOT
+-- Watches the selected host's ammo and mirrors their shots.
+-- ============================================================
+
+do
+(function()
+    local HostShot = {
+        Hosts = {},
+        LastAmmo = setmetatable({}, { __mode = "k" }),
+        Emojis = {},
+        EmojiConns = {},
+        OnChanged = nil,
+        Busy = false,
+        Key1 = false,
+        Key2 = false,
+        ComboUsed = false,
+        MaxHosts = 3,
+    }
+    local HOST_KEY_1, HOST_KEY_2 = Enum.KeyCode.F1, Enum.KeyCode.Z
+    local HOST_EMOJI = "🎯"
+
+    local function guiParent()
+        local ok, parent = pcall(function()
+            if type(gethui) == "function" then
+                return gethui()
+            end
+            return game:GetService("CoreGui")
+        end)
+        if ok and parent then
+            return parent
+        end
+        return nil
+    end
+
+    local function has(player)
+        for _, other in ipairs(HostShot.Hosts) do
+            if other == player then
+                return true
+            end
+        end
+        return false
+    end
+
+    local function destroyEmoji(player)
+        local gui = HostShot.Emojis[player.UserId]
+        if gui then
+            pcall(function()
+                gui:Destroy()
+            end)
+            HostShot.Emojis[player.UserId] = nil
+        end
+    end
+
+    local function detachEmoji(player)
+        local connection = HostShot.EmojiConns[player.UserId]
+        if connection then
+            pcall(function()
+                connection:Disconnect()
+            end)
+            HostShot.EmojiConns[player.UserId] = nil
+        end
+        destroyEmoji(player)
+    end
+
+    local function attachEmoji(player)
+        if not S.HostShot_ShowEmoji then
+            return
+        end
+        local parent = guiParent()
+        if not parent then
+            return
+        end
+        local function build(character)
+            if not character or not has(player) then
+                return
+            end
+            local head = character:FindFirstChild("Head")
+            if not head then
+                return
+            end
+            destroyEmoji(player)
+            local gui = Instance.new("BillboardGui")
+            gui.Name = "host_emoji_" .. player.UserId
+            gui.Adornee = head
+            gui.Size = UDim2.new(0, 44, 0, 44)
+            gui.StudsOffset = Vector3.new(0, 2.6, 0)
+            gui.AlwaysOnTop = true
+            gui.ResetOnSpawn = false
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.fromScale(1, 1)
+            label.BackgroundTransparency = 1
+            label.Text = HOST_EMOJI
+            label.TextScaled = true
+            label.Font = Enum.Font.Legacy
+            label.TextColor3 = Color3.fromRGB(255, 215, 0)
+            label.TextStrokeTransparency = 0
+            label.TextStrokeColor3 = Color3.new()
+            label.Parent = gui
+            gui.Parent = parent
+            HostShot.Emojis[player.UserId] = gui
+        end
+        build(player.Character)
+        HostShot.EmojiConns[player.UserId] = player.CharacterAdded:Connect(function(character)
+            task.wait(0.35)
+            build(character)
+        end)
+    end
+
+    function HostShot.Names()
+        if #HostShot.Hosts == 0 then
+            return "Хост: — (F1+Z под прицелом)"
+        end
+        local names = {}
+        for _, player in ipairs(HostShot.Hosts) do
+            table.insert(names, player.Name)
+        end
+        return "Хост: " .. table.concat(names, ", ")
+    end
+
+    local function changed()
+        if HostShot.OnChanged then
+            pcall(HostShot.OnChanged, HostShot.Names())
+        end
+    end
+
+    function HostShot.Add(player)
+        if not player or player == LocalPlayer or player.Parent ~= Players then
+            return false, "Игрок не найден"
+        end
+        if has(player) then
+            return false, "Уже выбран"
+        end
+        if #HostShot.Hosts >= HostShot.MaxHosts then
+            return false, "Максимум " .. HostShot.MaxHosts .. " хоста"
+        end
+        table.insert(HostShot.Hosts, player)
+        table.clear(HostShot.LastAmmo)
+        attachEmoji(player)
+        changed()
+        return true
+    end
+
+    function HostShot.Remove(player)
+        for index, other in ipairs(HostShot.Hosts) do
+            if other == player then
+                table.remove(HostShot.Hosts, index)
+                detachEmoji(other)
+                table.clear(HostShot.LastAmmo)
+                changed()
+                return true
+            end
+        end
+        return false
+    end
+
+    function HostShot.Clear()
+        for _, player in ipairs(HostShot.Hosts) do
+            detachEmoji(player)
+        end
+        HostShot.Hosts = {}
+        table.clear(HostShot.LastAmmo)
+        changed()
+    end
+
+    function HostShot.SetEmoji(show)
+        for _, player in ipairs(HostShot.Hosts) do
+            if show then
+                attachEmoji(player)
+            else
+                detachEmoji(player)
+            end
+        end
+    end
+
+    function HostShot.ClosestToCrosshair()
+        local camera = workspace.CurrentCamera
+        if not camera then
+            return nil
+        end
+        local mouseLocation = UserInputService:GetMouseLocation()
+        local best, bestDistance = nil, math.huge
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and not WHITELIST.IsPlayer(player) then
+                local character = player.Character
+                local head = character and character:FindFirstChild("Head")
+                if head then
+                    local screen, onScreen = camera:WorldToViewportPoint(head.Position)
+                    if onScreen then
+                        local distance = (Vector2.new(screen.X, screen.Y) - mouseLocation).Magnitude
+                        if distance < bestDistance then
+                            best, bestDistance = player, distance
+                        end
+                    end
+                end
+            end
+        end
+        return best
+    end
+
+    local function clickOnce()
+        local press = getgenv().mouse1press
+        local release = getgenv().mouse1release
+        if type(press) == "function" and type(release) == "function" then
+            pcall(press)
+            task.wait(0.025 + math.random() * 0.015)
+            pcall(release)
+            return
+        end
+        local click = getgenv().mouse1click
+        if type(click) == "function" then
+            pcall(click)
+            return
+        end
+        local tool = getEquippedTool()
+        if tool then
+            pcall(function()
+                tool:Activate()
+            end)
+        end
+    end
+
+    local function shotDelay()
+        if S.HostShot_RandomDelay then
+            local minimum = math.min(S.HostShot_MinDelay, S.HostShot_MaxDelay)
+            local maximum = math.max(S.HostShot_MinDelay, S.HostShot_MaxDelay)
+            return minimum + math.random() * (maximum - minimum)
+        end
+        return S.HostShot_DelayBefore
+    end
+
+    local function fire()
+        if HostShot.Busy then
+            return
+        end
+        HostShot.Busy = true
+        task.spawn(function()
+            pcall(function()
+                local burst = math.max(1, math.floor((S.HostShot_Burst or 1) + 0.5))
+                for index = 1, burst do
+                    local delay = shotDelay()
+                    if delay and delay > 0 then
+                        task.wait(delay)
+                    end
+                    if not S.HostShot_Enabled then
+                        break
+                    end
+                    clickOnce()
+                    if index < burst then
+                        task.wait(math.max(0.001, S.HostShot_BurstDelay or 0.01))
+                    end
+                end
+            end)
+            HostShot.Busy = false
+        end)
+    end
+
+    local function update()
+        if not S.HostShot_Enabled or not alive() then
+            return
+        end
+        if #HostShot.Hosts == 0 then
+            return
+        end
+        if UserInputService:GetFocusedTextBox() then
+            return
+        end
+        local character = LocalPlayer.Character
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        if not humanoid or humanoid.Health <= 0 then
+            return
+        end
+
+        for index = #HostShot.Hosts, 1, -1 do
+            local player = HostShot.Hosts[index]
+            if not player or player.Parent ~= Players then
+                HostShot.Remove(player)
+            else
+                local hostCharacter = player.Character
+                local tool = hostCharacter and hostCharacter:FindFirstChildOfClass("Tool")
+                if tool then
+                    local ammo = tool:FindFirstChild("Ammo")
+                    if ammo and ammo:IsA("IntValue") and S.HostShot_Weapons[tool.Name] then
+                        local previous = HostShot.LastAmmo[tool]
+                        local current = ammo.Value
+                        if previous and current < previous then
+                            fire()
+                        end
+                        HostShot.LastAmmo[tool] = current
+                    else
+                        HostShot.LastAmmo[tool] = nil
+                    end
+                end
+            end
+        end
+    end
+
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed or not alive() then
+            return
+        end
+        if input.KeyCode == HOST_KEY_1 then
+            HostShot.Key1 = true
+        elseif input.KeyCode == HOST_KEY_2 then
+            HostShot.Key2 = true
+        else
+            return
+        end
+        if not (HostShot.Key1 and HostShot.Key2) or HostShot.ComboUsed then
+            return
+        end
+        HostShot.ComboUsed = true
+        local player = HostShot.ClosestToCrosshair()
+        if not player then
+            notify("Auto Shot: игрок под прицелом не найден")
+            return
+        end
+        if has(player) then
+            HostShot.Remove(player)
+            notify("Auto Shot: хост снят — " .. player.Name)
+        else
+            local ok, reason = HostShot.Add(player)
+            notify(ok and ("Auto Shot: хост — " .. player.Name) or ("Auto Shot: " .. tostring(reason)))
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.KeyCode == HOST_KEY_1 then
+            HostShot.Key1 = false
+        end
+        if input.KeyCode == HOST_KEY_2 then
+            HostShot.Key2 = false
+        end
+        if not HostShot.Key1 and not HostShot.Key2 then
+            HostShot.ComboUsed = false
+        end
+    end)
+
+    Players.PlayerRemoving:Connect(function(player)
+        if has(player) then
+            HostShot.Remove(player)
+        end
+    end)
+
+    S.HostShot = HostShot
+    S.UpdateHostShot = update
+end)()
+end
+
+-- ============================================================
+-- SILENT AIM (Mouse.Hit)
+-- ============================================================
+
+do
+(function()
+    local SilentV2 = {
+        Installed = false,
+        HookOriginal = nil,
+        Circle = nil,
+        Mouse = nil,
+    }
+    local GuiService = game:GetService("GuiService")
+
+    local function getMouse()
+        if not SilentV2.Mouse then
+            local ok, mouse = pcall(function()
+                return LocalPlayer:GetMouse()
+            end)
+            if ok then
+                SilentV2.Mouse = mouse
+            end
+        end
+        return SilentV2.Mouse
+    end
+
+    local function targetPart(player)
+        if not player or player == LocalPlayer or WHITELIST.IsPlayer(player) then
+            return nil
+        end
+        if S.Aimbot_LockActive and not S.Aimbot_Lock[player.Name] then
+            return nil
+        end
+        local character = player.Character
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        if not humanoid or humanoid.Health <= 0 then
+            return nil
+        end
+        if S.SilentV2_KnockCheck and humanoid.Health <= S.SilentV2_MinHealth then
+            return nil
+        end
+        local part = character:FindFirstChild(S.SilentV2_Part)
+        if part and part:IsA("BasePart") then
+            return part
+        end
+        return nil
+    end
+
+    local function findTarget()
+        local camera = workspace.CurrentCamera
+        if not camera then
+            return nil
+        end
+        local mouseLocation = UserInputService:GetMouseLocation()
+        local best, bestDistance = nil, S.SilentV2_FOV
+        for _, player in ipairs(Players:GetPlayers()) do
+            local part = targetPart(player)
+            if part then
+                local screen, onScreen = camera:WorldToScreenPoint(part.Position)
+                if onScreen then
+                    local distance = (Vector2.new(screen.X, screen.Y) - mouseLocation).Magnitude
+                    if distance <= bestDistance then
+                        best, bestDistance = part, distance
+                    end
+                end
+            end
+        end
+        return best
+    end
+
+    local function hookValue(object, key)
+        if not S.SilentV2_Enabled or key ~= "Hit" then
+            return nil, false
+        end
+        local mouse = getMouse()
+        if not mouse then
+            return nil, false
+        end
+        local isMouse = object == mouse
+        if not isMouse then
+            local ok, result = pcall(function()
+                return typeof(object) == "Instance" and object:IsA("Mouse")
+            end)
+            isMouse = ok and result
+        end
+        if not isMouse then
+            return nil, false
+        end
+        local part = findTarget()
+        if not part then
+            return nil, false
+        end
+        local prediction = S.SilentV2_Prediction or 0
+        return part.CFrame + (part.AssemblyLinearVelocity * prediction), true
+    end
+
+    function SilentV2.Install()
+        if SilentV2.Installed then
+            return true
+        end
+        local wrapper = (newcclosure or function(fn)
+            return fn
+        end)(function(object, key)
+            local ok, value, changed = pcall(hookValue, object, key)
+            if ok and changed then
+                return value
+            end
+            return SilentV2.HookOriginal(object, key)
+        end)
+        local hooked = false
+        if type(hookmetamethod) == "function" then
+            local ok, original = pcall(function()
+                return hookmetamethod(game, "__index", wrapper)
+            end)
+            if ok and type(original) == "function" then
+                SilentV2.HookOriginal = original
+                hooked = true
+            end
+        end
+        if not hooked then
+            local ok, meta = pcall(getrawmetatable, game)
+            if ok and meta then
+                SilentV2.HookOriginal = meta.__index
+                pcall(setreadonly, meta, false)
+                meta.__index = wrapper
+                pcall(setreadonly, meta, true)
+                hooked = true
+            end
+        end
+        if not hooked then
+            return false
+        end
+        SilentV2.Installed = true
+        return true
+    end
+
+    function SilentV2.RestoreHook()
+        if not SilentV2.Installed then
+            return
+        end
+        local original = SilentV2.HookOriginal
+        local restored = false
+        if type(hookmetamethod) == "function" then
+            restored = pcall(function()
+                hookmetamethod(game, "__index", original)
+            end)
+        end
+        if not restored then
+            pcall(function()
+                local meta = getrawmetatable(game)
+                if meta then
+                    setreadonly(meta, false)
+                    meta.__index = original
+                    setreadonly(meta, true)
+                end
+            end)
+        end
+        SilentV2.Installed = false
+    end
+
+    local function updateCircle()
+        local circle = SilentV2.Circle
+        if not circle then
+            if SilentV2.CircleFailed then
+                return
+            end
+            local ok, created = pcall(function()
+                return Drawing.new("Circle")
+            end)
+            if not ok or not created then
+                SilentV2.CircleFailed = true
+                return
+            end
+            created.Thickness = 2
+            created.Filled = false
+            created.NumSides = 64
+            created.Color = Color3.fromRGB(255, 255, 255)
+            circle = created
+            SilentV2.Circle = circle
+        end
+        local visible = S.SilentV2_Enabled and S.SilentV2_ShowFOV
+        circle.Visible = visible
+        if not visible then
+            return
+        end
+        local mouse = getMouse()
+        local inset = 0
+        pcall(function()
+            inset = GuiService:GetGuiInset().Y
+        end)
+        if mouse then
+            circle.Position = Vector2.new(mouse.X, mouse.Y + inset)
+        end
+        circle.Radius = S.SilentV2_FOV
+        circle.Transparency = math.clamp(S.SilentV2_Transparency or 0.5, 0, 1)
+    end
+
+    function SilentV2.Destroy()
+        if SilentV2.Circle then
+            pcall(function()
+                SilentV2.Circle:Remove()
+            end)
+            SilentV2.Circle = nil
+        end
+        SilentV2.RestoreHook()
+    end
+
+    RunService.RenderStepped:Connect(function()
+        if not alive() then
+            return
+        end
+        pcall(updateCircle)
+    end)
+
+    S.SilentV2 = SilentV2
+    task.defer(function()
+        pcall(SilentV2.Install)
+    end)
+end)()
+end
+
+-- ============================================================
 -- INSTAKILL: MAG DUMP
 -- ============================================================
 
@@ -7759,70 +8680,6 @@ local HookAvailable = false
 local restoreHook = function() end
 local hookOriginal = nil
 
--- Silent aim fallback: steer hitscan shots made through Workspace:Raycast /
--- FindPartOnRay so they land on the silent target regardless of camera
-local SILENT_RAY_REACH = 22
-
-local function silentRayDirection(origin, direction, headPosition, targetPosition)
-    if typeof(origin) ~= "Vector3" or typeof(direction) ~= "Vector3" then
-        return nil
-    end
-    if direction.Magnitude < 25 then
-        return nil
-    end
-    if (origin - headPosition).Magnitude > SILENT_RAY_REACH then
-        return nil
-    end
-
-    local toTarget = targetPosition - origin
-    local distance = toTarget.Magnitude
-    if distance < 1 then
-        return nil
-    end
-
-    return toTarget.Unit * math.max(direction.Magnitude, distance + 2)
-end
-
-local function rewriteSilentRay(method, args)
-    if INSTA and INSTA.Owns() then return false end
-    local targetPart = CurrentTargetPart
-    if not targetPart or not targetPart.Parent then
-        return false
-    end
-    if WHITELIST.IsTarget(targetPart, CurrentTargetPlayer) then return false end
-    local humanoid = targetPart.Parent:FindFirstChildOfClass("Humanoid")
-    if not humanoid or humanoid.Health <= 0 then
-        return false
-    end
-
-    local character = LocalPlayer.Character
-    local head = character and (character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart"))
-    if not head then
-        return false
-    end
-    local headPosition = head.Position
-    local targetPosition = targetPart.Position
-
-    if method == "Raycast" then
-        local direction = silentRayDirection(args[1], args[2], headPosition, targetPosition)
-        if direction then
-            args[2] = direction
-            return true
-        end
-        return false
-    end
-
-    local ray = args[1]
-    if typeof(ray) == "Ray" then
-        local direction = silentRayDirection(ray.Origin, ray.Direction, headPosition, targetPosition)
-        if direction then
-            args[1] = Ray.new(ray.Origin, direction)
-            return true
-        end
-    end
-    return false
-end
-
 local function nameMatches(instance, hints)
     local name = instance.Name
     if type(name) ~= "string" then
@@ -7848,7 +8705,7 @@ local function installHook()
                 return hookOriginal(self, ...)
             end
             local active = S.Instakill_Enabled or S.TP_Bullet_Enabled or S.Ammo_Enabled
-                or S.NoReload_Enabled or S.Aimbot_Mode == "Silent"
+                or S.NoReload_Enabled
             if not active then
                 return hookOriginal(self, ...)
             end
@@ -7857,18 +8714,6 @@ local function installHook()
             end
 
             local method = getnamecallmethod()
-
-            if S.Aimbot_Mode == "Silent" and not internalRay
-                and (method == "Raycast" or method == "FindPartOnRay"
-                    or method == "FindPartOnRayWithIgnoreList"
-                    or method == "FindPartOnRayWithWhitelist") then
-                local args = table.pack(...)
-                local changedOk, changed = pcall(rewriteSilentRay, method, args)
-                if changedOk and changed then
-                    return hookOriginal(self, table.unpack(args, 1, args.n))
-                end
-                return hookOriginal(self, ...)
-            end
 
             if S.Ammo_Enabled and method == "Activate" and self:IsA("Tool") then
                 pcall(refillAmmo)
@@ -7952,16 +8797,6 @@ local RAY = {
 
 local function getBulletTPTarget()
     if INSTA and INSTA.Owns() then return nil end
-    if S.Aimbot_Mode == "Silent" and CurrentTargetPart then
-        local part = CurrentTargetPart
-        if WHITELIST.IsTarget(part, CurrentTargetPlayer) then return nil end
-        local character = part.Parent
-        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-        if part.Parent and humanoid and humanoid.Health > 0 then
-            return part
-        end
-        return nil
-    end
     if EXPLOITS_LOCKED then
         return nil
     end
@@ -8066,7 +8901,7 @@ local function rewriteBulletArgs(args, targetPart)
     if not originIndex or not directionIndex then
         return false
     end
-    if S.Aimbot_Mode ~= "Silent" and (originPosition - headPosition).Magnitude > S.TP_Bullet_Range then
+    if (originPosition - headPosition).Magnitude > S.TP_Bullet_Range then
         return false
     end
 
@@ -8109,7 +8944,7 @@ local function tryHookRaycast(hookFn, module, key)
     local wrapper
     wrapper = function(...)
         local tpActive = S.TP_Bullet_Enabled and not EXPLOITS_LOCKED
-        if not tpActive and S.Aimbot_Mode ~= "Silent" then
+        if not tpActive then
             return original(...)
         end
 
@@ -8740,19 +9575,6 @@ if HasDrawing then
     end
 end
 
-local silentCircle = nil
-if HasDrawing then
-    local ok, circle = pcall(Drawing.new, "Circle")
-    if ok then
-        silentCircle = circle
-        silentCircle.Thickness = 1
-        silentCircle.Color = Color3.fromRGB(255, 90, 90)
-        silentCircle.Transparency = 1
-        silentCircle.Filled = false
-        silentCircle.Visible = false
-    end
-end
-
 RunService.RenderStepped:Connect(function(dt)
     if not alive() then
         return
@@ -8772,7 +9594,7 @@ RunService.RenderStepped:Connect(function(dt)
     INSTA.Render()
     updateAimbot(dt, mouse)
     updateSpinbot(dt)
-    updateSpeedAndJump()
+    updateJump()
     updateFly(dt)
     updateNoclip()
     updateAntiFling()
@@ -8783,15 +9605,6 @@ RunService.RenderStepped:Connect(function(dt)
             fovCircle.Position = mouse
             fovCircle.Radius = S.Aim_FOV
             fovCircle.Color = S.FOV_Color
-        end
-    end
-
-    if silentCircle then
-        silentCircle.Visible = S.Silent_ShowFOV
-        if S.Silent_ShowFOV then
-            silentCircle.Position = mouse
-            silentCircle.Radius = S.Silent_FOV
-            silentCircle.Color = S.Silent_FOV_Color
         end
     end
 
@@ -8811,6 +9624,9 @@ RunService.Heartbeat:Connect(function(dt)
     end
 
     updateAutoShot(dt)
+    if S.UpdateHostShot then
+        S.UpdateHostShot()
+    end
     updateAutoStomp(dt)
     INSTA.Update(dt)
     updateRage(dt)
@@ -8829,7 +9645,7 @@ RunService.Heartbeat:Connect(function(dt)
         updateAntiStomp(dt)
     end
 
-    if (S.Aimbot_Mode == "Silent" or (S.TP_Bullet_Enabled and not EXPLOITS_LOCKED)) and not RAY.hooked then
+    if S.TP_Bullet_Enabled and not EXPLOITS_LOCKED and not RAY.hooked then
         RAY.hookClock -= dt
         if RAY.hookClock <= 0 then
             RAY.hookClock = 3
@@ -11314,7 +12130,6 @@ local ICONS = {
 
 local flagCounter = 0
 local flagMap = {}
-local syncingAimMode = false
 local function flag(name)
     flagCounter += 1
     local generated = string.format("supreme_%s_%d", name, flagCounter)
@@ -11462,27 +12277,8 @@ aimSection:Toggle({
     end,
 })
 
-aimSection:Dropdown({
-    Name = "Aimbot mode",
-    Flag = flag("aim_mode"),
-    Items = { "Normal", "Silent" },
-    Default = "Normal",
-    Multi = false,
-    Callback = function(value)
-        S.Aimbot_Mode = value
-
-        if syncingAimMode then
-            return
-        end
-
-        local target = flagMap["silent_aim"]
-        if target and Library.SetFlags[target] then
-            syncingAimMode = true
-            pcall(Library.SetFlags[target], value == "Silent")
-            syncingAimMode = false
-        end
-    end,
-})
+-- Legacy aim-mode switch removed; keep its flag id stable for saved configs
+flag("aim_mode")
 
 aimSection:Dropdown({
     Name = "Aim part",
@@ -11571,91 +12367,14 @@ aimExtraSection:Slider({
     end,
 })
 
--- Combat: Silent aim
-local silentSection = CombatPage:Section({ Name = "Silent aim", Side = 2, Tab = "Aimbot" })
-
-silentSection:Toggle({
-    Name = "Silent aim",
-    Flag = flag("silent_aim"),
-    Default = false,
-    Callback = function(value)
-        if syncingAimMode then
-            return
-        end
-
-        local target = flagMap["aim_mode"]
-        if target and Library.SetFlags[target] then
-            syncingAimMode = true
-            pcall(Library.SetFlags[target], value and "Silent" or "Normal")
-            syncingAimMode = false
-        else
-            S.Aimbot_Mode = value and "Silent" or "Normal"
-        end
-    end,
-})
-
-silentSection:Dropdown({
-    Name = "Silent target part",
-    Flag = flag("silent_part"),
-    Items = { "Head", "Torso", "Nearest" },
-    Default = "Head",
-    Multi = false,
-    Callback = function(value)
-        S.Silent_AimPart = value
-    end,
-})
-
-silentSection:Slider({
-    Name = "Silent FOV",
-    Flag = flag("silent_fov"),
-    Min = 20,
-    Max = 800,
-    Default = 300,
-    Decimals = 1,
-    Callback = function(value)
-        S.Silent_FOV = value
-    end,
-})
-
-silentSection:Slider({
-    Name = "Silent range",
-    Flag = flag("silent_range"),
-    Min = 50,
-    Max = 2000,
-    Default = 500,
-    Decimals = 10,
-    Callback = function(value)
-        S.Silent_Range = value
-    end,
-})
-
-silentSection:Toggle({
-    Name = "Silent wall check",
-    Flag = flag("silent_wall"),
-    Default = false,
-    Callback = function(value)
-        S.Silent_WallCheck = value
-    end,
-})
-
-silentSection:Toggle({
-    Name = "Show silent FOV",
-    Flag = flag("silent_showfov"),
-    Default = false,
-    Callback = function(value)
-        S.Silent_ShowFOV = value
-    end,
-})
-
-silentSection:Label("Silent FOV color"):Colorpicker({
-    Flag = flag("silent_fovcolor"),
-    Default = Color3.fromRGB(255, 90, 90),
-    Callback = function(color)
-        S.Silent_FOV_Color = color
-    end,
-})
-
-silentSection:Label("Пули летят в цель без ПКМ (в пределах FOV)")
+-- Legacy silent aim removed; keep flag ids stable for saved configs
+flag("silent_aim")
+flag("silent_part")
+flag("silent_fov")
+flag("silent_range")
+flag("silent_wall")
+flag("silent_showfov")
+flag("silent_fovcolor")
 
 -- Combat: Shooting
 local shotSection = CombatPage:Section({ Name = "Auto Shot", Side = 1, Tab = "Shooting" })
@@ -12820,38 +13539,14 @@ stompSection:Toggle({
     end,
 })
 
-local speedSection = MovementPage:Section({ Name = "Speed", Side = 2, Tab = "Movement" })
 local jumpSection = MovementPage:Section({ Name = "Jump", Side = 2, Tab = "Movement" })
 local flySection = MovementPage:Section({ Name = "Fly", Side = 2, Tab = "Movement" })
 local moveExtraSection = MovementPage:Section({ Name = "Extra", Side = 2, Tab = "Movement" })
 local teleportSection = MovementPage:Section({ Name = "Teleport", Side = 2, Tab = "Movement" })
 
-speedSection:Toggle({
-    Name = "Speed",
-    Flag = flag("speed"),
-    Default = false,
-    Callback = function(value)
-        S.Speed_Enabled = value
-    end,
-})
-
-setSpeedEnabled = function(value)
-    local setter = Library.SetFlags[flagMap["speed"]]
-    if setter then setter(value) else S.Speed_Enabled = value end
-end
-speedSection:Label("Applies once; stops if the game resets speed")
-
-speedSection:Slider({
-    Name = "Walkspeed",
-    Flag = flag("speed_value"),
-    Min = 16,
-    Max = 120,
-    Default = 60,
-    Decimals = 1,
-    Callback = function(value)
-        S.Speed_Value = value
-    end,
-})
+-- Speed removed; keep flag ids stable for saved configs
+flag("speed")
+flag("speed_value")
 
 jumpSection:Toggle({
     Name = "Jump Power",
@@ -13340,34 +14035,6 @@ local function addToggleBind(title, stateKey, flagName)
     end)
 end
 
-local function addModeBind(title)
-    local keybind
-    keybind = bindFunctionsSection:Label(title):Keybind({
-        Flag = flag("bind_silent_aim"),
-        Mode = "Toggle",
-        Callback = function(value)
-            if not bindsReady then
-                return
-            end
-            local newMode
-            if keybind and keybind.Mode == "Hold" then
-                newMode = value and "Silent" or "Normal"
-            else
-                newMode = (S.Aimbot_Mode == "Silent") and "Normal" or "Silent"
-            end
-            local target = flagMap["aim_mode"]
-            if target and Library.SetFlags[target] then
-                Library.SetFlags[target](newMode)
-            else
-                S.Aimbot_Mode = newMode
-            end
-        end,
-    })
-    registerBind(title, keybind, function()
-        return S.Aimbot_Mode == "Silent"
-    end)
-end
-
 local function addActionBind(title, action)
     local keybind
     keybind = bindActionsSection:Label(title):Keybind({
@@ -13388,7 +14055,8 @@ local function addActionBind(title, action)
 end
 
 addToggleBind("Aimbot", "Aimbot_Enabled", "aimbot")
-addModeBind("Silent aim")
+-- Legacy silent-aim bind removed; keep its flag id stable
+flag("bind_silent_aim")
 addToggleBind("Rage", "Rage_Enabled", "rage")
 addToggleBind("Player ESP", "ESP_Enabled", "esp_players")
 addToggleBind("TP Bullet", "TP_Bullet_Enabled", "tpbullet")
@@ -13396,7 +14064,8 @@ addToggleBind("Hitbox", "Hitbox_Enabled", "hitbox")
 addToggleBind("Auto Stomp", "AutoStomp_Enabled", "autostomp")
 addToggleBind("Anti-Ragdoll", "AntiStomp_NoRagdoll", "stomp_ragdoll")
 addToggleBind("Instakill", "Instakill_Enabled", "instakill")
-addToggleBind("Speed", "Speed_Enabled", "speed")
+-- Speed bind removed; keep its flag id stable
+flag("bind_speed")
 addToggleBind("Fly", "Fly_Enabled", "fly")
 addToggleBind("Infinite Jump", "InfiniteJump_Enabled", "infjump")
 addToggleBind("Noclip", "Noclip_Enabled", "noclip")
@@ -13409,6 +14078,11 @@ addActionBind("Switch track", function()
     end
     return sound ~= nil
 end)
+
+addToggleBind("Auto Shot (host)", "HostShot_Enabled", "hostshot")
+addToggleBind("Silent aim", "SilentV2_Enabled", "silentv2")
+
+bindListSection:Label("F1 + Z — хост для Auto Shot (host)")
 
 bindListSection:Button({
     Name = "Reset all binds",
@@ -13423,6 +14097,266 @@ bindListSection:Button({
 })
 bindListSection:Label("Right-click a key to change mode")
 bindsReady = true
+end
+
+-- ============================================================
+-- COMBAT ADDONS: HOST AUTO SHOT + SILENT AIM
+-- ============================================================
+
+do
+(function()
+    local host = S.HostShot
+    local silent = S.SilentV2
+
+    local hostSection = CombatPage:Section({ Name = "Auto Shot (host)", Side = 1, Tab = "Shooting" })
+    local hostSettingsSection = CombatPage:Section({ Name = "Host shot delays", Side = 2, Tab = "Shooting" })
+    local hostWeaponsSection = CombatPage:Section({ Name = "Host weapons", Side = 2, Tab = "Shooting" })
+    local silentSection = CombatPage:Section({ Name = "Silent aim", Side = 2, Tab = "Aimbot" })
+
+    local hostStatus = hostSection:Label(host.Names())
+    host.OnChanged = function(text)
+        if hostStatus then
+            hostStatus:SetText(text)
+        end
+    end
+
+    hostSection:Toggle({
+        Name = "Auto Shot (host)",
+        Flag = flag("hostshot"),
+        Default = false,
+        Callback = function(value)
+            S.HostShot_Enabled = value
+            table.clear(host.LastAmmo)
+            if value and #host.Hosts == 0 then
+                notify("Auto Shot: выбери хоста (F1+Z)")
+            end
+        end,
+    })
+
+    hostSection:Button({
+        Name = "Select host (nearest)",
+        Callback = function()
+            local player = host.ClosestToCrosshair()
+            if not player then
+                notify("Auto Shot: игрок под прицелом не найден")
+                return
+            end
+            local ok, reason = host.Add(player)
+            notify(ok and ("Auto Shot: хост — " .. player.Name) or tostring(reason))
+        end,
+    })
+
+    hostSection:Button({
+        Name = "Clear hosts",
+        Callback = function()
+            host.Clear()
+            notify("Auto Shot: хосты очищены")
+        end,
+    })
+
+    hostSection:Toggle({
+        Name = "Show 🎯 above host",
+        Flag = flag("hostshot_emoji"),
+        Default = true,
+        Callback = function(value)
+            S.HostShot_ShowEmoji = value
+            host.SetEmoji(value)
+        end,
+    })
+
+    hostSection:Label("F1 + Z — навести на игрока, чтобы добавить/снять хоста")
+
+    hostSettingsSection:Toggle({
+        Name = "Random delay",
+        Flag = flag("hostshot_random"),
+        Default = true,
+        Callback = function(value)
+            S.HostShot_RandomDelay = value
+        end,
+    })
+
+    hostSettingsSection:Slider({
+        Name = "Min delay (мс)",
+        Flag = flag("hostshot_mindelay"),
+        Min = 1,
+        Max = 300,
+        Default = 135,
+        Decimals = 1,
+        Suffix = " ms",
+        Callback = function(value)
+            S.HostShot_MinDelay = value / 1000
+        end,
+    })
+
+    hostSettingsSection:Slider({
+        Name = "Max delay (мс)",
+        Flag = flag("hostshot_maxdelay"),
+        Min = 1,
+        Max = 300,
+        Default = 155,
+        Decimals = 1,
+        Suffix = " ms",
+        Callback = function(value)
+            S.HostShot_MaxDelay = value / 1000
+        end,
+    })
+
+    hostSettingsSection:Slider({
+        Name = "Delay before shot (мс)",
+        Flag = flag("hostshot_delay"),
+        Min = 1,
+        Max = 300,
+        Default = 10,
+        Decimals = 1,
+        Suffix = " ms",
+        Callback = function(value)
+            S.HostShot_DelayBefore = value / 1000
+        end,
+    })
+
+    hostSettingsSection:Slider({
+        Name = "Burst shots",
+        Flag = flag("hostshot_burst"),
+        Min = 1,
+        Max = 10,
+        Default = 1,
+        Decimals = 1,
+        Callback = function(value)
+            S.HostShot_Burst = math.floor(value + 0.5)
+        end,
+    })
+
+    hostSettingsSection:Slider({
+        Name = "Burst delay (мс)",
+        Flag = flag("hostshot_burstdelay"),
+        Min = 1,
+        Max = 200,
+        Default = 10,
+        Decimals = 1,
+        Suffix = " ms",
+        Callback = function(value)
+            S.HostShot_BurstDelay = value / 1000
+        end,
+    })
+
+    hostSettingsSection:Label("Стреляет сразу, как хост тратит патрон")
+
+    local hostWeapons = {
+        "[Knife]",
+        "[Pistol]",
+        "[Deagle]",
+        "[Revolver]",
+        "[Shotgun]",
+        "[TacticalShotgun]",
+        "[Double-Barrel SG]",
+        "[SMG]",
+        "[Rifle]",
+        "[Sniper]",
+    }
+    for _, weapon in ipairs(hostWeapons) do
+        local weaponName = weapon
+        hostWeaponsSection:Toggle({
+            Name = weaponName,
+            Flag = flag("hostshot_weapon_" .. string.gsub(weaponName, "[%[%]%-%s]", "")),
+            Default = S.HostShot_Weapons[weaponName] == true,
+            Callback = function(value)
+                S.HostShot_Weapons[weaponName] = value
+            end,
+        })
+    end
+
+    silentSection:Toggle({
+        Name = "Silent aim",
+        Flag = flag("silentv2"),
+        Default = false,
+        Callback = function(value)
+            S.SilentV2_Enabled = value
+            if value and not silent.Install() then
+                notify("Silent aim: хук недоступен")
+            end
+        end,
+    })
+
+    silentSection:Dropdown({
+        Name = "Target part",
+        Flag = flag("silentv2_part"),
+        Items = { "Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso" },
+        Default = "Head",
+        Multi = false,
+        Callback = function(value)
+            S.SilentV2_Part = value
+        end,
+    })
+
+    silentSection:Slider({
+        Name = "Prediction",
+        Flag = flag("silentv2_prediction"),
+        Min = 0,
+        Max = 1,
+        Default = 0,
+        Decimals = 0.01,
+        Callback = function(value)
+            S.SilentV2_Prediction = value
+        end,
+    })
+
+    silentSection:Slider({
+        Name = "FOV radius",
+        Flag = flag("silentv2_fov"),
+        Min = 50,
+        Max = 600,
+        Default = 300,
+        Decimals = 1,
+        Suffix = " px",
+        Callback = function(value)
+            S.SilentV2_FOV = value
+        end,
+    })
+
+    silentSection:Toggle({
+        Name = "Show FOV circle",
+        Flag = flag("silentv2_showfov"),
+        Default = true,
+        Callback = function(value)
+            S.SilentV2_ShowFOV = value
+        end,
+    })
+
+    silentSection:Slider({
+        Name = "Circle transparency",
+        Flag = flag("silentv2_transparency"),
+        Min = 0,
+        Max = 1,
+        Default = 0.5,
+        Decimals = 0.05,
+        Callback = function(value)
+            S.SilentV2_Transparency = value
+        end,
+    })
+
+    silentSection:Toggle({
+        Name = "Skip knocked",
+        Flag = flag("silentv2_knock"),
+        Default = true,
+        Callback = function(value)
+            S.SilentV2_KnockCheck = value
+        end,
+    })
+
+    silentSection:Slider({
+        Name = "Min health",
+        Flag = flag("silentv2_minhealth"),
+        Min = 0,
+        Max = 100,
+        Default = 1,
+        Decimals = 1,
+        Callback = function(value)
+            S.SilentV2_MinHealth = value
+        end,
+    })
+
+    silentSection:Label("Пули летят в ближайшую цель в FOV без ПКМ")
+end)()
 end
 
 -- ============================================================
@@ -13981,6 +14915,73 @@ colorSection:Label("Цвета применяются сразу, без пер�
 end
 
 -- ============================================================
+-- TARGET LOCK (Aimbot tab)
+-- ============================================================
+
+do
+(function()
+local lockSection = CombatPage:Section({ Name = "Target lock", Side = 1, Tab = "Aimbot" })
+
+local function lockNames()
+    local names = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(names, player.Name)
+        end
+    end
+    table.sort(names)
+    return names
+end
+
+local lockDropdown
+local function refreshLockOptions()
+    if not lockDropdown or not alive() then
+        return
+    end
+    lockDropdown:Refresh(lockNames())
+    lockDropdown:Set(lockDropdown.Value)
+end
+
+lockDropdown = lockSection:Dropdown({
+    Name = "Target players (empty = all)",
+    Flag = flag("aim_lock"),
+    Items = lockNames(),
+    Multi = true,
+    Callback = function(list)
+        local lock = {}
+        for _, name in ipairs(list or {}) do
+            lock[name] = true
+        end
+        S.Aimbot_Lock = lock
+        S.Aimbot_LockActive = next(lock) ~= nil
+    end,
+})
+
+lockSection:Label("Aimbot и Silent aim бьют только по выбранным")
+
+Players.PlayerAdded:Connect(function()
+    task.defer(refreshLockOptions)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if S.Aimbot_Lock[player.Name] then
+        S.Aimbot_Lock[player.Name] = nil
+        S.Aimbot_LockActive = next(S.Aimbot_Lock) ~= nil
+        local value = lockDropdown.Value
+        if type(value) == "table" then
+            for index = #value, 1, -1 do
+                if value[index] == player.Name then
+                    table.remove(value, index)
+                end
+            end
+        end
+    end
+    task.defer(refreshLockOptions)
+end)
+end)()
+end
+
+-- ============================================================
 -- MENU FX: DIM + SNOW
 -- ============================================================
 
@@ -14495,6 +15496,8 @@ local function unload()
 
     S.Aimbot_Enabled = false
     S.AutoShot_Enabled = false
+    S.HostShot_Enabled = false
+    S.SilentV2_Enabled = false
     S.Instakill_Enabled = false
     S.TP_Bullet_Enabled = false
     S.Rage_Enabled = false
@@ -14504,7 +15507,6 @@ local function unload()
     S.Hitbox_Enabled = false
     S.AutoStomp_Enabled = false
     S.Spinbot_Enabled = false
-    S.Speed_Enabled = false
     S.Jump_Enabled = false
     S.Fly_Enabled = false
     S.Noclip_Enabled = false
@@ -14530,6 +15532,13 @@ local function unload()
     pcall(restoreRaycastHooks)
     getgenv().__SupremeHubRestoreRaycast = nil
 
+    pcall(function()
+        if S.HostShot then S.HostShot.Clear() end
+    end)
+    pcall(function()
+        if S.SilentV2 then S.SilentV2.Destroy() end
+    end)
+
     pcall(function() if getgenv().InvisibleFX then getgenv().InvisibleFX.Unload() end end)
     pcall(function() if getgenv().StompAura then getgenv().StompAura.Stop() end end)
     pcall(function() if getgenv().InvisibleESP then getgenv().InvisibleESP:Unload() end end)
@@ -14550,12 +15559,6 @@ local function unload()
         end)
         fovCircle = nil
     end
-    if silentCircle then
-        pcall(function()
-            silentCircle:Remove()
-        end)
-        silentCircle = nil
-    end
 
     Lighting.Ambient = OriginalAmbient
     Lighting.Brightness = OriginalBrightness
@@ -14566,9 +15569,6 @@ local function unload()
     local saved = humanoid and movementSaved[humanoid]
     if humanoid and saved then
         pcall(function()
-            if saved.SpeedApplied and humanoid.WalkSpeed == saved.SpeedTarget then
-                humanoid.WalkSpeed = saved.WalkSpeed
-            end
             if saved.JumpApplied then
                 humanoid.UseJumpPower = saved.UseJumpPower
                 humanoid.JumpPower = saved.JumpPower
@@ -14607,6 +15607,11 @@ local function unload()
     if getgenv().__SupremeHubCleanup == unload then
         getgenv().__SupremeHubCleanup = nil
     end
+    if InvisibleLoader and InvisibleLoader.destroy then
+        pcall(InvisibleLoader.destroy)
+    end
+    getgenv().__InvisibleLoaderReady = nil
+
     getgenv().InvisibleESP = nil
     getgenv().InvisibleFX = nil
     getgenv().StompAura = nil
@@ -14618,6 +15623,7 @@ menuSection:Button({
 })
 
 getgenv().__SupremeHubCleanup = unload
+getgenv().__InvisibleLoaderReady = true
 if getgenv().__SupremeHubRestoreHook then
     restoreHook = getgenv().__SupremeHubRestoreHook
 end
@@ -14675,5 +15681,9 @@ task.spawn(function()
         end)
     end
 end)
+
+if InvisibleLoader then
+    InvisibleLoader.finish()
+end
 
 notify("RAGE v6.2 loaded · Insert / V / F2")
